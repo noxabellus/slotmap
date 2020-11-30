@@ -83,7 +83,7 @@ The slot and key structures are just aliases for `Pair`, which has two fields:
 
 ### Freelist
 
-The *freelist* is referred to here as a "pseudo linked list" because it is implemented by repurposing the `index` field of `Slot`. When a slot becomes free, its old *value*'s `index` is overwritten with the index of the next slot in the *freelist*, if there is one. Because there is no `NULL` for unsigned indices, the *freelist* tail is tracked, to avoid misinterpreting *value* indices as *freelist* indices
+The *freelist* is referred to here as a "pseudo linked list" because it is implemented by repurposing the `index` field of `Slot`. When a slot becomes free, its old *value* `index` is overwritten with the index of the next slot in the freelist, if there is one. Because there is no `NULL` for unsigned indices, the *freelist* tail is tracked, to avoid misinterpreting value indices as freelist indices
 
 
 ### Behavior
@@ -100,7 +100,7 @@ Cleanup a slotmap's memory allocations with `del`. Alternatively, you can manual
 
 #### Insertion
 
-When adding a new *value* into the slotmap, the value will always be placed at the end of the `values` array. The `Slot` used will be either a brand new one at the end of the slots array, or the last one freed if it is available in the *freelist*. After a slot for the value has been acquired, the index of the slot is inserted parallel to the value in the `slot_finder` array, to facilitate remapping the slot during relocation of the value. A `Key` is returned with the index of the slot, and the slot's `generation`
+When adding a new *value* into the slotmap, the value will always be placed at the end of the `values` array. The `Slot` used will be either a brand new one at the end of the `slots` array, or the last one freed if it is available in the *freelist*. After a slot for the value has been acquired, the index of the slot is inserted parallel to the value in the `slot_finder` array, to facilitate remapping the slot during relocation of the value. A `Key` is returned with the index of the slot, and the slot's `generation`
 
 
 #### Lookup
@@ -110,7 +110,7 @@ To lookup a *value*, the `Key` returned at insertion must be provided. The key's
 
 #### Removal
 
-When a *value* needs to be removed, its `Key` must be provided, and lookup occurs as normal. If the key was invalid, `false` is returned here. Otherwise, the value and its parallel slot lookup index in the `slot_finder` array are *swap removed*. In swap removal, the element from the end of the array is moved to overwrite the removed data. This keeps the array tightly packed with the minimal amount of memory copied. After swapping, the end slot lookup index is used to point assign associated `Slot` the index the end value was moved to. Finally, the freed slot is added to the *freelist*, and `true` is returned. As a convenience, this implementation allows providing an out pointer to copy the removed value to before it is overwritten
+When a *value* needs to be removed, its `Key` must be provided, and lookup occurs as normal. If the key was invalid, `false` is returned at this time. Otherwise, the value and its parallel slot lookup index in the `slot_finder` array are *swap removed*. In swap removal, the element from the end of the array is moved to overwrite the removed data. This keeps the array tightly packed with the minimal amount of memory copied. After swapping, the swapped slot lookup index is used to locate the associated `Slot`, and change its `index` to the index the swapped value was moved to. Finally, the freed slot is added to the *freelist*, and `true` is returned. As a convenience, this implementation allows providing an out pointer to copy the removed value to before it is overwritten
 
 
 #### Extras
