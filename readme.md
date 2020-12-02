@@ -153,29 +153,28 @@ To inline the implementation into your source, include the file with a proceedin
 To compile a free-standing library, you can just define `sm_SLOTMAP_IMPL` through the command line
 ```sh
 clang -Dsm_SLOTMAP_IMPL slotmap.c
-# ...
 clang your_source/*.c slotmap.o
 ```
 
 
 ### Dynamic/Shared Library
 
-To compile a shared library or dll, you must define `sm_SLOTMAP_IMPL`, and on windows you must also define `sm_SHARED_LIB` while compiling and including as a header 
+To compile a shared library or dll, you must define `sm_SLOTMAP_IMPL` while compiling the library, and on Windows you must also define `sm_SHARED_LIB` while compiling the library and when including it as a header 
 
 #### Linux:
 
-<!--TODO: add example for static linking linux so file-->
 ```sh
-clang -Dsm_SLOTMAP_IMPL slotmap.c -fPIC -shared -oslotmap.so
+clang -Dsm_SLOTMAP_IMPL -fPIC -shared slotmap.c -olibslotmap.so
+clang -L. -Wl,-rpath=. -lslotmap your_source/*.c
 ```
+Note that this is example is a bit unconventional for Linux software distribution, in that the `-Wl,-rpath=.` linker argument tells the dynamic linker to search for `libslotmap.so` in the program's directory rather than in the typical system directories. This is totally optional and is only written this way here to allow for 1:1 correspondence to the Windows example below.
 
 
 #### Windows:
 
 ```bat
 clang-cl -Dsm_SLOTMAP_IMPL -Dsm_SHARED_LIB /LD slotmap.c
-:: ...
-clang-cl your_source/*.c slotmap.lib
+clang-cl slotmap.lib your_source/*.c
 ```
 ```c
 // my_windows_file.h
